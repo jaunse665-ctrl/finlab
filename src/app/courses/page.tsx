@@ -64,8 +64,31 @@ export default function CoursesPage() {
               </div>
             </div>
 
-            {/* Listado de Módulos */}
+            {/* Recursos y Preparación */}
             <div className="space-y-4">
+              <h2 className="text-xl font-bold tracking-tight mb-4 text-foreground">Recursos Iniciales</h2>
+              <Card className="hover:border-primary/50 transition-colors bg-zinc-50 border-dashed border-2">
+                <CardHeader className="flex flex-row items-center gap-4 py-4">
+                  <div className="h-10 w-10 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-600">
+                    <Database className="w-5 h-5" />
+                  </div>
+                  <div className="flex-1">
+                    <CardTitle className="text-base font-bold">Guía de Instalación: R y RStudio</CardTitle>
+                    <CardDescription className="text-xs mt-0.5">
+                      Paso a paso oficial para configurar tu entorno de laboratorio en Windows/Mac antes de iniciar.
+                    </CardDescription>
+                  </div>
+                  <a href="/courses/instalacion-r.pdf" target="_blank" rel="noopener noreferrer">
+                    <Button variant="outline" size="sm" className="bg-white">
+                      Ver PDF
+                    </Button>
+                  </a>
+                </CardHeader>
+              </Card>
+            </div>
+
+            {/* Listado de Módulos */}
+            <div className="space-y-4 pt-4">
               <h2 className="text-2xl font-bold tracking-tight mb-6">Pensum Académico</h2>
               {modules.map((mod, i) => (
                 <Card key={mod.id} className={`transition-all ${mod.status === 'locked' ? 'opacity-60 grayscale' : 'hover:border-primary/50'}`}>
