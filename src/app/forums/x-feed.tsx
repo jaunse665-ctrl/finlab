@@ -7,6 +7,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Input } from "@/components/ui/input"
 import { MessageCircle, Heart, Share, Repeat2, Send, CornerDownRight } from "lucide-react"
 import { createPost, createReply, likePost, likeReply } from "./actions"
+import { useRouter } from "next/navigation"
 
 interface User {
   name: string | null;
@@ -31,16 +32,25 @@ interface Post {
 }
 
 export function XFeed({ initialPosts, currentUserName }: { initialPosts: Post[], currentUserName: string }) {
+  const router = useRouter()
   const [posts, setPosts] = useState<Post[]>(initialPosts)
   const [newPostContent, setNewPostContent] = useState("")
   const [replyingTo, setReplyingTo] = useState<string | null>(null)
   const [replyContent, setReplyContent] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false)
 
-  // Sincronizar estado local cuando el servidor envía nuevos datos vía revalidatePath
+  // Sincronizar estado local cuando el servidor envía nuevos datos vía revalidatePath o refresh
   useEffect(() => {
     setPosts(initialPosts)
   }, [initialPosts])
+
+  // Polling automático: actualiza el foro cada 10 segundos para ver posts de otros estudiantes en tiempo real
+  useEffect(() => {
+    const interval = setInterval(() => {
+      router.refresh()
+    }, 10000) // 10 segundos
+    return () => clearInterval(interval)
+  }, [router])
 
   // Función para obtener las iniciales
   const getInitials = (name: string | null) => name ? name.charAt(0).toUpperCase() : "U";
