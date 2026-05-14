@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { BookOpen, LineChart, GraduationCap, ArrowRight } from "lucide-react";
+import { BookOpen, LineChart, Users, ArrowRight } from "lucide-react";
 
 export default function Home() {
   return (
@@ -21,18 +21,11 @@ export default function Home() {
               
               <div className="flex flex-col sm:flex-row gap-4 mt-8 w-full sm:w-auto">
                 <Link 
-                  href="/courses" 
+                  href="/networking" 
                   className="inline-flex h-12 items-center justify-center rounded-md bg-blue-600 px-8 text-sm font-medium text-white shadow transition-colors hover:bg-blue-700 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-blue-700"
                 >
-                  <BookOpen className="mr-2 h-4 w-4" />
-                  Explorar Cursos
-                </Link>
-                <Link 
-                  href="/dashboard/teacher" 
-                  className="inline-flex h-12 items-center justify-center rounded-md border border-zinc-200 bg-white px-8 text-sm font-medium shadow-sm transition-colors hover:bg-zinc-100 hover:text-zinc-900 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-zinc-950 dark:border-zinc-800 dark:bg-zinc-950 dark:hover:bg-zinc-900 dark:hover:text-zinc-50"
-                >
-                  <GraduationCap className="mr-2 h-4 w-4" />
-                  Panel de Profesor
+                  <Users className="mr-2 h-4 w-4" />
+                  Iniciar
                 </Link>
               </div>
             </div>

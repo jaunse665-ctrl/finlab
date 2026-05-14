@@ -177,3 +177,14 @@ model Dataset {
   fileUrl     String
   createdAt   DateTime @default(now())
 }
+
+model NetworkingPost {
+  id          String   @id @default(cuid())
+  authorName  String
+  content     String
+  color       String   @default("bg-yellow-200")
+  x           Float    @default(0)
+  y           Float    @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
