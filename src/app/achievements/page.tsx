@@ -10,9 +10,11 @@ import { Separator } from "@/components/ui/separator"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
 import { Badge } from "@/components/ui/badge"
-import { Trophy, Code2, TrendingUp, ShieldAlert, Briefcase, Award, Lock, Sparkles } from "lucide-react"
+import { Input } from "@/components/ui/input"
+import { Button } from "@/components/ui/button"
+import { Trophy, Code2, TrendingUp, ShieldAlert, Briefcase, Award, Lock, Sparkles, AlertCircle } from "lucide-react"
 import { useState, useEffect } from "react"
-import { toggleBadge, getUserBadges } from "./actions"
+import { claimBadgeWithCode, getUserBadges, resetBadge } from "./actions"
 
 const BASE_ACHIEVEMENTS = [
   {
@@ -71,6 +73,8 @@ export default function AchievementsPage() {
   const [unlockedBadges, setUnlockedBadges] = useState<any[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [isToggling, setIsToggling] = useState<number | null>(null)
+  const [codes, setCodes] = useState<Record<number, string>>({})
+  const [errors, setErrors] = useState<Record<number, string>>({})
 
   const loadBadges = async () => {
     try {
@@ -87,23 +91,36 @@ export default function AchievementsPage() {
     loadBadges()
   }, [])
 
-  const handleToggle = async (badgeId: number) => {
-    setIsToggling(badgeId)
-    try {
-      // Optimistic update
-      const exists = unlockedBadges.find(b => b.badgeId === badgeId)
-      if (exists) {
-        setUnlockedBadges(prev => prev.filter(b => b.badgeId !== badgeId))
-      } else {
-        setUnlockedBadges(prev => [...prev, { badgeId, createdAt: new Date() }])
-      }
+  const handleClaim = async (badgeId: number) => {
+    const code = codes[badgeId]
+    if (!code) {
+      setErrors({ ...errors, [badgeId]: "Ingresa un código" })
+      return
+    }
 
-      await toggleBadge(badgeId)
-    } catch (error) {
-      console.error("Error toggling badge:", error)
-      loadBadges() // Revert on error
+    setIsToggling(badgeId)
+    setErrors({ ...errors, [badgeId]: "" })
+    
+    try {
+      await claimBadgeWithCode(badgeId, code)
+      // Success! Optimistically update and clear code
+      setUnlockedBadges(prev => [...prev, { badgeId, createdAt: new Date() }])
+      setCodes({ ...codes, [badgeId]: "" })
+    } catch (error: any) {
+      console.error("Error claiming badge:", error)
+      setErrors({ ...errors, [badgeId]: error.message || "Código incorrecto" })
     } finally {
       setIsToggling(null)
+    }
+  }
+
+  const handleReset = async (badgeId: number) => {
+    // For testing/teacher purposes to remove a badge
+    try {
+      setUnlockedBadges(prev => prev.filter(b => b.badgeId !== badgeId))
+      await resetBadge(badgeId)
+    } catch (e) {
+      loadBadges()
     }
   }
 
@@ -160,47 +177,68 @@ export default function AchievementsPage() {
                     key={achievement.id} 
                     className={`relative overflow-hidden transition-all duration-500 rounded-2xl ${
                       isUnlocked 
-                        ? `border-2 ${achievement.border} shadow-md bg-white hover:scale-[1.02]` 
-                        : 'opacity-80 grayscale hover:grayscale-0 hover:border-border border-dashed border-2 bg-zinc-50 hover:bg-zinc-100'
+                        ? `border-2 ${achievement.border} shadow-lg bg-white holographic-card hover:scale-[1.02]` 
+                        : 'opacity-90 grayscale hover:grayscale-[0.5] border-border border-dashed border-2 bg-zinc-50'
                     }`}
                   >
                     {!isUnlocked && (
-                      <div className="absolute top-4 right-4 bg-white/50 backdrop-blur rounded-full p-1 border">
+                      <div className="absolute top-4 right-4 bg-white/50 backdrop-blur rounded-full p-1 border shadow-sm">
                         <Lock className="h-4 w-4 text-muted-foreground" />
                       </div>
                     )}
                     
-                    <CardHeader className="text-center pb-2 pt-8">
-                      <div className={`mx-auto h-16 w-16 rounded-[1.25rem] flex items-center justify-center mb-4 transition-colors duration-500 ${isUnlocked ? achievement.bg : 'bg-zinc-200'}`}>
+                    <CardHeader className="text-center pb-2 pt-8 z-10 relative">
+                      <div className={`mx-auto h-16 w-16 rounded-[1.25rem] flex items-center justify-center mb-4 transition-colors duration-500 shadow-sm ${isUnlocked ? achievement.bg : 'bg-zinc-200'}`}>
                         <achievement.icon className={`h-8 w-8 transition-colors duration-500 ${isUnlocked ? achievement.color : 'text-zinc-400'}`} />
                       </div>
-                      <CardTitle className="text-lg font-bold">{achievement.title}</CardTitle>
+                      <CardTitle className={`text-lg font-bold ${isUnlocked ? 'text-zinc-900' : 'text-zinc-600'}`}>{achievement.title}</CardTitle>
                       
                       {isUnlocked ? (
-                        <Badge variant="secondary" className="mx-auto mt-2 w-max text-xs bg-primary text-primary-foreground hover:bg-primary/90 flex items-center gap-1 cursor-pointer" onClick={() => handleToggle(achievement.id)}>
-                          <Sparkles className="h-3 w-3" />
-                          Reclamado: {dateStr}
+                        <Badge variant="secondary" className="mx-auto mt-2 w-max text-xs bg-primary text-primary-foreground flex items-center gap-1 cursor-pointer hover:bg-red-500 hover:text-white transition-colors group" onClick={() => handleReset(achievement.id)}>
+                          <Sparkles className="h-3 w-3 group-hover:hidden" />
+                          <span className="group-hover:hidden">Reclamado: {dateStr}</span>
+                          <span className="hidden group-hover:inline">Revocar (Test)</span>
                         </Badge>
                       ) : (
-                        <div className="mt-2 space-y-3">
+                        <div className="mt-4 space-y-3 px-2">
                           <div className="space-y-1">
                             <div className="flex justify-between text-[10px] uppercase font-bold text-muted-foreground">
-                              <span>Progreso Oculto</span>
+                              <span>Misión Oculta</span>
                               <span>{achievement.progress}%</span>
                             </div>
                             <Progress value={achievement.progress || 0} className="h-1 bg-zinc-200" />
                           </div>
-                          <button 
-                            disabled={isToggling === achievement.id}
-                            onClick={() => handleToggle(achievement.id)}
-                            className="w-max mx-auto px-4 py-1.5 text-xs font-bold bg-primary text-primary-foreground rounded-full hover:bg-primary/90 hover:scale-105 transition-transform active:scale-95 disabled:opacity-50"
-                          >
-                            {isToggling === achievement.id ? "Reclamando..." : "Reclamar Insignia"}
-                          </button>
+                          
+                          <div className="space-y-2 pt-2">
+                            <Input 
+                              placeholder="Código secreto..."
+                              className={`h-8 text-xs text-center font-mono uppercase bg-white ${errors[achievement.id] ? 'border-red-500 focus-visible:ring-red-500' : ''}`}
+                              value={codes[achievement.id] || ""}
+                              onChange={(e) => {
+                                setCodes({...codes, [achievement.id]: e.target.value.toUpperCase()})
+                                setErrors({...errors, [achievement.id]: ""})
+                              }}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter') handleClaim(achievement.id)
+                              }}
+                            />
+                            {errors[achievement.id] && (
+                              <p className="text-[10px] text-red-500 flex items-center justify-center gap-1 font-medium">
+                                <AlertCircle className="w-3 h-3" /> {errors[achievement.id]}
+                              </p>
+                            )}
+                            <Button 
+                              disabled={isToggling === achievement.id || !codes[achievement.id]}
+                              onClick={() => handleClaim(achievement.id)}
+                              className="w-full h-8 text-xs font-bold bg-primary text-primary-foreground rounded-full hover:bg-primary/90 hover:scale-[1.02] transition-transform active:scale-95 disabled:opacity-50"
+                            >
+                              {isToggling === achievement.id ? "Validando..." : "Desbloquear"}
+                            </Button>
+                          </div>
                         </div>
                       )}
                     </CardHeader>
-                    <CardContent className="text-center">
+                    <CardContent className="text-center z-10 relative">
                       <p className="text-sm text-muted-foreground leading-relaxed">
                         {achievement.description}
                       </p>
