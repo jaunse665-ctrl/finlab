@@ -1,10 +1,7 @@
 import Link from "next/link";
-import { BookOpen, LineChart, GraduationCap, ArrowRight, LayoutDashboard } from "lucide-react";
-import { auth } from "@/lib/auth";
+import { BookOpen, LineChart, GraduationCap, ArrowRight } from "lucide-react";
 
-export default async function Home() {
-  const session = await auth();
-
+export default function Home() {
   return (
     <div className="flex min-h-screen flex-col bg-zinc-50 dark:bg-zinc-950 font-sans">
       <main className="flex-1">
@@ -23,34 +20,20 @@ export default async function Home() {
               </p>
               
               <div className="flex flex-col sm:flex-row gap-4 mt-8 w-full sm:w-auto">
-                {session ? (
-                  <>
-                    <Link 
-                      href="/dashboard" 
-                      className="inline-flex h-12 items-center justify-center rounded-md bg-blue-600 px-8 text-sm font-medium text-white shadow transition-colors hover:bg-blue-700"
-                    >
-                      <LayoutDashboard className="mr-2 h-4 w-4" />
-                      Ir al Panel
-                    </Link>
-                    {session.user?.role === "TEACHER" && (
-                      <Link 
-                        href="/dashboard/teacher" 
-                        className="inline-flex h-12 items-center justify-center rounded-md border border-zinc-200 bg-white px-8 text-sm font-medium shadow-sm transition-colors hover:bg-zinc-100 hover:text-zinc-900 dark:border-zinc-800 dark:bg-zinc-950 dark:hover:bg-zinc-900 dark:hover:text-zinc-50"
-                      >
-                        <GraduationCap className="mr-2 h-4 w-4" />
-                        Panel de Profesor
-                      </Link>
-                    )}
-                  </>
-                ) : (
-                  <Link 
-                    href="/login" 
-                    className="inline-flex h-12 items-center justify-center rounded-md bg-blue-600 px-8 text-sm font-medium text-white shadow transition-colors hover:bg-blue-700"
-                  >
-                    <BookOpen className="mr-2 h-4 w-4" />
-                    Iniciar Sesión para Empezar
-                  </Link>
-                )}
+                <Link 
+                  href="/courses" 
+                  className="inline-flex h-12 items-center justify-center rounded-md bg-blue-600 px-8 text-sm font-medium text-white shadow transition-colors hover:bg-blue-700 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-blue-700"
+                >
+                  <BookOpen className="mr-2 h-4 w-4" />
+                  Explorar Cursos
+                </Link>
+                <Link 
+                  href="/dashboard/teacher" 
+                  className="inline-flex h-12 items-center justify-center rounded-md border border-zinc-200 bg-white px-8 text-sm font-medium shadow-sm transition-colors hover:bg-zinc-100 hover:text-zinc-900 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-zinc-950 dark:border-zinc-800 dark:bg-zinc-950 dark:hover:bg-zinc-900 dark:hover:text-zinc-50"
+                >
+                  <GraduationCap className="mr-2 h-4 w-4" />
+                  Panel de Profesor
+                </Link>
               </div>
             </div>
           </div>
