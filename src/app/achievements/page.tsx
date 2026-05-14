@@ -140,7 +140,7 @@ export default function AchievementsPage() {
                           <span>Progreso</span>
                           <span>{achievement.progress}%</span>
                         </div>
-                        <Progress value={achievement.progress} className="h-1" />
+                        <Progress value={achievement.progress || 0} className="h-1" />
                       </div>
                     )}
                   </CardHeader>
