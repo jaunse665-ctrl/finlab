@@ -1,5 +1,7 @@
 import NextAuth from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
+import GoogleProvider from "next-auth/providers/google";
+import { PrismaAdapter } from "@auth/prisma-adapter";
 import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcryptjs";
 
@@ -17,7 +19,12 @@ export const prisma =
 if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = prisma;
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
+  adapter: PrismaAdapter(prisma),
   providers: [
+    GoogleProvider({
+      clientId: process.env.GOOGLE_CLIENT_ID,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+    }),
     CredentialsProvider({
       name: "Credentials",
       credentials: {
@@ -33,7 +40,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           where: { email: credentials.email as string }
         });
 
-        if (!user) {
+        if (!user || !user.passwordHash) {
           return null;
         }
 
@@ -58,9 +65,22 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
-        token.role = user.role;
+        // user object is only passed the first time after login
+        token.role = (user as any).role || "STUDENT";
         token.id = user.id as string;
       }
+      
+      // Auto-assign TEACHER role to specific email
+      if (token.email === 'jaunse665@gmail.com' && token.role !== 'TEACHER') {
+        token.role = 'TEACHER';
+        if (token.id) {
+          await prisma.user.update({
+            where: { id: token.id as string },
+            data: { role: 'TEACHER' }
+          }).catch(console.error);
+        }
+      }
+      
       return token;
     },
     async session({ session, token }) {
