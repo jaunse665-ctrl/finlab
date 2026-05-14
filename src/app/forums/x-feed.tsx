@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useRef } from "react"
+import { useState, useRef, useEffect } from "react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
@@ -36,6 +36,11 @@ export function XFeed({ initialPosts, currentUserName }: { initialPosts: Post[],
   const [replyingTo, setReplyingTo] = useState<string | null>(null)
   const [replyContent, setReplyContent] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false)
+
+  // Sincronizar estado local cuando el servidor envía nuevos datos vía revalidatePath
+  useEffect(() => {
+    setPosts(initialPosts)
+  }, [initialPosts])
 
   // Función para obtener las iniciales
   const getInitials = (name: string | null) => name ? name.charAt(0).toUpperCase() : "U";
