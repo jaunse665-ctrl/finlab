@@ -1,3 +1,5 @@
+"use client"
+
 import { AppSidebar } from "@/components/app-sidebar"
 import {
   SidebarProvider,
@@ -8,70 +10,106 @@ import { Separator } from "@/components/ui/separator"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
 import { Badge } from "@/components/ui/badge"
-import { Trophy, Code2, TrendingUp, ShieldAlert, Briefcase, Award, Lock } from "lucide-react"
+import { Trophy, Code2, TrendingUp, ShieldAlert, Briefcase, Award, Lock, Sparkles } from "lucide-react"
+import { useState, useEffect } from "react"
+import { toggleBadge, getUserBadges } from "./actions"
 
-const achievements = [
+const BASE_ACHIEVEMENTS = [
   {
     id: 1,
     title: "Primer Script en R",
     description: "Ejecutaste con éxito tu primer bloque de código en el Laboratorio.",
     icon: Code2,
-    unlocked: true,
-    date: "12 Oct 2026",
     color: "text-blue-500",
     bg: "bg-blue-500/10",
-    border: "border-blue-500/20"
+    border: "border-blue-500/20",
+    progress: 100 // It doesn't use progress when unlocked
   },
   {
     id: 2,
     title: "Experto en Sharpe",
     description: "Calculaste correctamente el Sharpe Ratio y optimizaste el riesgo.",
     icon: TrendingUp,
-    unlocked: true,
-    date: "14 Oct 2026",
     color: "text-green-500",
     bg: "bg-green-500/10",
-    border: "border-green-500/20"
+    border: "border-green-500/20",
+    progress: 100
   },
   {
     id: 3,
     title: "Analista de Riesgo",
     description: "Completaste las simulaciones de Value at Risk (VaR) histórico y Monte Carlo.",
     icon: ShieldAlert,
-    unlocked: false,
-    progress: 45,
     color: "text-orange-500",
     bg: "bg-orange-500/10",
-    border: "border-orange-500/20"
+    border: "border-orange-500/20",
+    progress: 45
   },
   {
     id: 4,
     title: "Constructor de Portafolios",
     description: "Graficaste la frontera eficiente de Markowitz para múltiples activos.",
     icon: Briefcase,
-    unlocked: false,
-    progress: 0,
     color: "text-purple-500",
     bg: "bg-purple-500/10",
-    border: "border-purple-500/20"
+    border: "border-purple-500/20",
+    progress: 0
   },
   {
     id: 5,
     title: "Maestría Cuantitativa",
     description: "Proyecto Final entregado y aprobado con excelencia.",
     icon: Award,
-    unlocked: false,
-    progress: 0,
     color: "text-yellow-500",
     bg: "bg-yellow-500/10",
-    border: "border-yellow-500/20"
+    border: "border-yellow-500/20",
+    progress: 0
   }
 ]
 
 export default function AchievementsPage() {
-  const unlockedCount = achievements.filter(a => a.unlocked).length
-  const totalCount = achievements.length
-  const completionPercentage = Math.round((unlockedCount / totalCount) * 100)
+  const [unlockedBadges, setUnlockedBadges] = useState<any[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [isToggling, setIsToggling] = useState<number | null>(null)
+
+  const loadBadges = async () => {
+    try {
+      const badges = await getUserBadges()
+      setUnlockedBadges(badges)
+    } catch (error) {
+      console.error("Error loading badges:", error)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    loadBadges()
+  }, [])
+
+  const handleToggle = async (badgeId: number) => {
+    setIsToggling(badgeId)
+    try {
+      // Optimistic update
+      const exists = unlockedBadges.find(b => b.badgeId === badgeId)
+      if (exists) {
+        setUnlockedBadges(prev => prev.filter(b => b.badgeId !== badgeId))
+      } else {
+        setUnlockedBadges(prev => [...prev, { badgeId, createdAt: new Date() }])
+      }
+
+      await toggleBadge(badgeId)
+    } catch (error) {
+      console.error("Error toggling badge:", error)
+      loadBadges() // Revert on error
+    } finally {
+      setIsToggling(null)
+    }
+  }
+
+  const unlockedCount = unlockedBadges.length
+  const totalCount = BASE_ACHIEVEMENTS.length
+  const completionPercentage = Math.round((unlockedCount / totalCount) * 100) || 0
 
   return (
     <SidebarProvider>
@@ -85,18 +123,18 @@ export default function AchievementsPage() {
           </div>
         </header>
         
-        <main className="flex-1 overflow-auto bg-muted/20 p-6">
+        <main className="flex-1 overflow-auto bg-background p-6">
           <div className="max-w-5xl mx-auto space-y-8">
             
-            <div className="flex flex-col md:flex-row justify-between md:items-center gap-6 bg-primary/5 border border-primary/20 rounded-xl p-6">
+            <div className="flex flex-col md:flex-row justify-between md:items-center gap-6 bg-zinc-50 border border-border rounded-2xl p-6 shadow-sm">
               <div className="flex items-center gap-6">
-                <div className="h-20 w-20 rounded-full bg-primary/10 flex items-center justify-center border-4 border-primary/20">
+                <div className="h-20 w-20 rounded-full bg-primary/5 flex items-center justify-center border-4 border-primary/10">
                   <Trophy className="h-10 w-10 text-primary" />
                 </div>
                 <div>
-                  <h1 className="text-3xl font-bold tracking-tight">Tus Insignias</h1>
-                  <p className="text-muted-foreground mt-1">
-                    Colecciona medallas demostrando tus habilidades financieras en R.
+                  <h1 className="text-3xl font-bold tracking-tight text-foreground">Tus Insignias</h1>
+                  <p className="text-muted-foreground mt-1 text-sm">
+                    Reclama y colecciona medallas demostrando tus habilidades financieras en R.
                   </p>
                 </div>
               </div>
@@ -110,47 +148,66 @@ export default function AchievementsPage() {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {achievements.map((achievement) => (
-                <Card 
-                  key={achievement.id} 
-                  className={`relative overflow-hidden transition-all duration-300 ${
-                    achievement.unlocked 
-                      ? `border-2 ${achievement.border} shadow-sm hover:shadow-md` 
-                      : 'opacity-70 grayscale hover:grayscale-0'
-                  }`}
-                >
-                  {!achievement.unlocked && (
-                    <div className="absolute top-3 right-3">
-                      <Lock className="h-4 w-4 text-muted-foreground" />
-                    </div>
-                  )}
-                  
-                  <CardHeader className="text-center pb-2 pt-8">
-                    <div className={`mx-auto h-16 w-16 rounded-2xl flex items-center justify-center mb-4 ${achievement.unlocked ? achievement.bg : 'bg-muted'}`}>
-                      <achievement.icon className={`h-8 w-8 ${achievement.unlocked ? achievement.color : 'text-muted-foreground'}`} />
-                    </div>
-                    <CardTitle className="text-lg">{achievement.title}</CardTitle>
-                    {achievement.unlocked ? (
-                      <Badge variant="secondary" className="mx-auto mt-2 w-max text-xs bg-primary/10 text-primary hover:bg-primary/20">
-                        Desbloqueado: {achievement.date}
-                      </Badge>
-                    ) : (
-                      <div className="mt-2 space-y-1">
-                        <div className="flex justify-between text-[10px] uppercase font-bold text-muted-foreground">
-                          <span>Progreso</span>
-                          <span>{achievement.progress}%</span>
-                        </div>
-                        <Progress value={achievement.progress || 0} className="h-1" />
+              {BASE_ACHIEVEMENTS.map((achievement) => {
+                const badgeRecord = unlockedBadges.find(b => b.badgeId === achievement.id)
+                const isUnlocked = !!badgeRecord
+                const dateStr = badgeRecord?.createdAt 
+                  ? new Date(badgeRecord.createdAt).toLocaleDateString() 
+                  : ""
+
+                return (
+                  <Card 
+                    key={achievement.id} 
+                    className={`relative overflow-hidden transition-all duration-500 rounded-2xl ${
+                      isUnlocked 
+                        ? `border-2 ${achievement.border} shadow-md bg-white hover:scale-[1.02]` 
+                        : 'opacity-80 grayscale hover:grayscale-0 hover:border-border border-dashed border-2 bg-zinc-50 hover:bg-zinc-100'
+                    }`}
+                  >
+                    {!isUnlocked && (
+                      <div className="absolute top-4 right-4 bg-white/50 backdrop-blur rounded-full p-1 border">
+                        <Lock className="h-4 w-4 text-muted-foreground" />
                       </div>
                     )}
-                  </CardHeader>
-                  <CardContent className="text-center">
-                    <p className="text-sm text-muted-foreground leading-relaxed">
-                      {achievement.description}
-                    </p>
-                  </CardContent>
-                </Card>
-              ))}
+                    
+                    <CardHeader className="text-center pb-2 pt-8">
+                      <div className={`mx-auto h-16 w-16 rounded-[1.25rem] flex items-center justify-center mb-4 transition-colors duration-500 ${isUnlocked ? achievement.bg : 'bg-zinc-200'}`}>
+                        <achievement.icon className={`h-8 w-8 transition-colors duration-500 ${isUnlocked ? achievement.color : 'text-zinc-400'}`} />
+                      </div>
+                      <CardTitle className="text-lg font-bold">{achievement.title}</CardTitle>
+                      
+                      {isUnlocked ? (
+                        <Badge variant="secondary" className="mx-auto mt-2 w-max text-xs bg-primary text-primary-foreground hover:bg-primary/90 flex items-center gap-1 cursor-pointer" onClick={() => handleToggle(achievement.id)}>
+                          <Sparkles className="h-3 w-3" />
+                          Reclamado: {dateStr}
+                        </Badge>
+                      ) : (
+                        <div className="mt-2 space-y-3">
+                          <div className="space-y-1">
+                            <div className="flex justify-between text-[10px] uppercase font-bold text-muted-foreground">
+                              <span>Progreso Oculto</span>
+                              <span>{achievement.progress}%</span>
+                            </div>
+                            <Progress value={achievement.progress || 0} className="h-1 bg-zinc-200" />
+                          </div>
+                          <button 
+                            disabled={isToggling === achievement.id}
+                            onClick={() => handleToggle(achievement.id)}
+                            className="w-max mx-auto px-4 py-1.5 text-xs font-bold bg-primary text-primary-foreground rounded-full hover:bg-primary/90 hover:scale-105 transition-transform active:scale-95 disabled:opacity-50"
+                          >
+                            {isToggling === achievement.id ? "Reclamando..." : "Reclamar Insignia"}
+                          </button>
+                        </div>
+                      )}
+                    </CardHeader>
+                    <CardContent className="text-center">
+                      <p className="text-sm text-muted-foreground leading-relaxed">
+                        {achievement.description}
+                      </p>
+                    </CardContent>
+                  </Card>
+                )
+              })}
             </div>
 
           </div>

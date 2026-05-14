@@ -28,6 +28,19 @@ model User {
   forumPosts    ForumPost[]
   forumReplies  ForumReply[]
   progress      Progress[]
+  quizScores    QuizScore[]
+  badges        UserBadge[]
+}
+
+model UserBadge {
+  id        String   @id @default(cuid())
+  userId    String
+  badgeId   Int      // We use Int to match the hardcoded badge IDs
+  createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, badgeId])
 }
 
 model Account {
@@ -138,6 +151,7 @@ model ForumPost {
   title     String
   content   String
   moduleId  String?
+  likes     Int      @default(0)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -150,6 +164,7 @@ model ForumReply {
   postId    String
   authorId  String
   content   String
+  likes     Int      @default(0)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -185,6 +200,17 @@ model NetworkingPost {
   color       String   @default("bg-yellow-200")
   x           Float    @default(0)
   y           Float    @default(0)
+  likes       Int      @default(0)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+}
+
+model QuizScore {
+  id        String   @id @default(cuid())
+  userId    String
+  moduleId  String
+  score     Int
+  createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }

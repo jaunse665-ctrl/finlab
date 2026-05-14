@@ -6,13 +6,14 @@ import {
 } from "@/components/ui/sidebar"
 import { Separator } from "@/components/ui/separator"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
-import { LineChart, ArrowRight } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { Target, ArrowRight } from "lucide-react"
 import Link from "next/link"
-import { SIMULATOR_DATA } from "@/data/simulators"
+import { QUIZ_DATA } from "@/data/quizzes"
 import { buttonVariants } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 
-export default function LabIndexPage() {
+export default function ChallengeIndexPage() {
   return (
     <SidebarProvider>
       <AppSidebar />
@@ -21,33 +22,33 @@ export default function LabIndexPage() {
           <SidebarTrigger className="-ml-1" />
           <Separator orientation="vertical" className="mr-2 h-4" />
           <div className="flex-1">
-            <h1 className="text-sm font-medium text-muted-foreground">Simulador de Riesgos</h1>
+            <h1 className="text-sm font-medium text-muted-foreground">Reto Gamificado</h1>
           </div>
         </header>
 
         <main className="flex-1 overflow-auto bg-zinc-50 p-4 md:p-8">
           <div className="max-w-5xl mx-auto space-y-8">
             <div className="text-center space-y-2 mb-8">
-              <h1 className="text-4xl font-black tracking-tight text-zinc-900">Laboratorios de Simulación</h1>
-              <p className="text-lg text-zinc-500">Selecciona el simulador interactivo para poner en práctica los modelos financieros.</p>
+              <h1 className="text-4xl font-black tracking-tight text-zinc-900">Arena de Retos Gamificados</h1>
+              <p className="text-lg text-zinc-500">Selecciona el módulo en el que quieres competir y sube al podio de FinLab.</p>
             </div>
 
             <div className="grid md:grid-cols-2 gap-6">
-              {Object.entries(SIMULATOR_DATA).map(([moduleId, simInfo]) => (
+              {Object.entries(QUIZ_DATA).map(([moduleId, quizInfo]) => (
                 <Card key={moduleId} className="border-2 hover:border-primary/50 transition-all hover:shadow-md">
                   <CardHeader>
-                    <div className="w-12 h-12 bg-green-500/10 rounded-lg flex items-center justify-center mb-4">
-                      <LineChart className="w-6 h-6 text-green-600" />
+                    <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-4">
+                      <Target className="w-6 h-6 text-primary" />
                     </div>
-                    <CardTitle>{simInfo.title}</CardTitle>
-                    <CardDescription>{simInfo.description}</CardDescription>
+                    <CardTitle>{quizInfo.title}</CardTitle>
+                    <CardDescription>{quizInfo.description}</CardDescription>
                   </CardHeader>
                   <CardContent>
                     <Link 
-                      href={`/lab/${moduleId}`} 
-                      className={cn(buttonVariants({ variant: "outline" }), "w-full border-green-200 hover:bg-green-50 hover:text-green-700")}
+                      href={`/challenge/${moduleId}`} 
+                      className={cn(buttonVariants({ variant: "outline" }), "w-full")}
                     >
-                      Abrir Simulador <ArrowRight className="w-4 h-4 ml-2" />
+                      Entrar al Reto <ArrowRight className="w-4 h-4 ml-2" />
                     </Link>
                   </CardContent>
                 </Card>

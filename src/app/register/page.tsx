@@ -1,5 +1,3 @@
-import { signIn } from "@/lib/auth"
-import { AuthError } from "next-auth"
 import { redirect } from "next/navigation"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
@@ -8,20 +6,51 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { BookOpen, AlertCircle } from "lucide-react"
 import Link from "next/link"
+import { prisma } from "@/lib/auth"
+import bcrypt from "bcryptjs"
 
-export default function LoginPage({ searchParams }: { searchParams: { error?: string } }) {
-  async function handleLogin(formData: FormData) {
+export default function RegisterPage({ searchParams }: { searchParams: { error?: string } }) {
+  async function handleRegister(formData: FormData) {
     "use server"
+    const name = formData.get("name") as string
+    const email = formData.get("email") as string
+    const password = formData.get("password") as string
+
+    if (!name || !email || !password) {
+      redirect("/register?error=Todos los campos son obligatorios")
+    }
+
     try {
-      await signIn("credentials", formData)
-    } catch (error) {
-      if (error instanceof AuthError) {
-        if (error.type === "CredentialsSignin") {
-          redirect("/login?error=Credenciales incorrectas")
-        }
-        redirect("/login?error=Ocurrió un error al iniciar sesión")
+      // Check if user exists
+      const existingUser = await prisma.user.findUnique({
+        where: { email },
+      })
+
+      if (existingUser) {
+        redirect("/register?error=El correo ya está registrado")
       }
-      throw error // Rethrow the Next.js redirect error on success
+
+      // Hash password
+      const passwordHash = await bcrypt.hash(password, 10)
+
+      // Create user
+      await prisma.user.create({
+        data: {
+          name,
+          email,
+          passwordHash,
+          role: "STUDENT", // Default role
+        },
+      })
+
+      // Redirect to login after successful registration
+      redirect("/login?error=Cuenta creada exitosamente. Ahora puedes iniciar sesión.")
+    } catch (error: any) {
+      if (error.message === 'NEXT_REDIRECT') {
+        throw error;
+      }
+      console.error(error)
+      redirect("/register?error=Ocurrió un error al crear la cuenta")
     }
   }
 
@@ -37,28 +66,36 @@ export default function LoginPage({ searchParams }: { searchParams: { error?: st
       
       <Card className="w-full max-w-sm border-none shadow-none bg-transparent">
         <CardHeader className="text-center">
-          <CardTitle>Iniciar Sesión</CardTitle>
+          <CardTitle>Crear Cuenta</CardTitle>
           <CardDescription>
-            Ingresa tus credenciales para acceder a la plataforma.
+            Regístrate para acceder a la plataforma.
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form action={handleLogin} className="w-full space-y-4">
+          <form action={handleRegister} className="w-full space-y-4">
             {searchParams?.error && (
-              <div className="p-3 text-sm text-red-500 bg-red-50 dark:bg-red-950/50 border border-red-200 dark:border-red-900 rounded-md flex items-center gap-2">
+              <div className={`p-3 text-sm rounded-md flex items-center gap-2 ${
+                searchParams.error.includes("exitosamente") 
+                  ? "text-green-600 bg-green-50 border border-green-200" 
+                  : "text-red-500 bg-red-50 border border-red-200"
+              }`}>
                 <AlertCircle className="h-4 w-4" />
                 {searchParams.error}
               </div>
             )}
+            <div className="space-y-2">
+              <Label htmlFor="name">Nombre completo</Label>
+              <Input id="name" name="name" type="text" placeholder="Juan Pérez" required />
+            </div>
             <div className="space-y-2">
               <Label htmlFor="email">Correo electrónico</Label>
               <Input id="email" name="email" type="email" placeholder="correo@ejemplo.com" required />
             </div>
             <div className="space-y-2">
               <Label htmlFor="password">Contraseña</Label>
-              <Input id="password" name="password" type="password" required />
+              <Input id="password" name="password" type="password" required minLength={6} />
             </div>
-            
+
             <div className="flex items-start space-x-2 pt-2">
               <input 
                 type="checkbox" 
@@ -74,7 +111,7 @@ export default function LoginPage({ searchParams }: { searchParams: { error?: st
                 >
                   Acepto la{" "}
                   <Dialog>
-                    <DialogTrigger className="text-primary hover:underline underline-offset-4">
+                    <DialogTrigger className="text-primary hover:underline underline-offset-4" type="button">
                       Política de Protección de Datos Personales
                     </DialogTrigger>
                     <DialogContent>
@@ -99,21 +136,17 @@ export default function LoginPage({ searchParams }: { searchParams: { error?: st
               </div>
             </div>
 
-            <input type="hidden" name="redirectTo" value="/dashboard" />
             <Button className="w-full mt-4" type="submit">
-              Entrar
+              Registrarse
             </Button>
           </form>
         </CardContent>
         <CardFooter className="flex flex-col gap-4">
           <p className="text-sm text-center text-muted-foreground w-full">
-            ¿No tienes cuenta?{" "}
-            <Link href="/register" className="text-primary hover:underline font-medium">
-              Regístrate aquí
+            ¿Ya tienes una cuenta?{" "}
+            <Link href="/login" className="text-primary hover:underline font-medium">
+              Iniciar Sesión
             </Link>
-          </p>
-          <p className="text-xs text-center text-muted-foreground w-full">
-            Al iniciar sesión, aceptas los Términos de Servicio y la Política de Privacidad.
           </p>
         </CardFooter>
       </Card>

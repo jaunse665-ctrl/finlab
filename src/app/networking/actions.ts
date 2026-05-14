@@ -41,3 +41,43 @@ export async function updatePostItPosition(id: string, x: number, y: number) {
     return false;
   }
 }
+
+export async function deletePostIt(id: string) {
+  try {
+    await prisma.networkingPost.delete({
+      where: { id }
+    });
+    revalidatePath("/networking");
+    return true;
+  } catch (error) {
+    console.error("Error deleting post-it:", error);
+    return false;
+  }
+}
+
+export async function updatePostItContent(id: string, content: string) {
+  try {
+    await prisma.networkingPost.update({
+      where: { id },
+      data: { content }
+    });
+    revalidatePath("/networking");
+    return true;
+  } catch (error) {
+    console.error("Error updating post-it content:", error);
+    return false;
+  }
+}
+
+export async function likePostIt(id: string) {
+  try {
+    await prisma.networkingPost.update({
+      where: { id },
+      data: { likes: { increment: 1 } }
+    });
+    return true;
+  } catch (error) {
+    console.error("Error liking post-it:", error);
+    return false;
+  }
+}

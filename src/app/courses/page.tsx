@@ -9,16 +9,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Progress } from "@/components/ui/progress"
 import { Button } from "@/components/ui/button"
 import { BookOpen, Code2, Database, PlayCircle, Trophy } from "lucide-react"
+import Link from "next/link"
 
 const modules = [
-  { id: 1, title: "Introducción al mercado financiero y datos", status: "completed" },
-  { id: 2, title: "Estadística financiera aplicada", status: "completed" },
-  { id: 3, title: "Sharpe Ratio", status: "in-progress" },
-  { id: 4, title: "Value at Risk", status: "locked" },
-  { id: 5, title: "Portafolio eficiente de Markowitz", status: "locked" },
-  { id: 6, title: "Series de tiempo financieras", status: "locked" },
-  { id: 7, title: "Riesgo financiero empresarial (Altman Z-Score)", status: "locked" },
-  { id: 8, title: "Proyecto final", status: "locked" },
+  { id: 1, title: "Desmitificando el Riesgo", status: "completed" },
+  { id: 2, title: "Riesgos de Mercado", status: "in-progress" }
 ]
 
 export default function CoursesPage() {
@@ -30,7 +25,7 @@ export default function CoursesPage() {
           <SidebarTrigger className="-ml-1" />
           <Separator orientation="vertical" className="mr-2 h-4" />
           <div className="flex-1">
-            <h1 className="text-sm font-medium">Mis Cursos</h1>
+            <h1 className="text-sm font-medium">Contenido</h1>
           </div>
         </header>
         <main className="flex-1 overflow-auto bg-muted/20 p-6">
@@ -42,13 +37,13 @@ export default function CoursesPage() {
                   <div className="inline-block bg-primary text-primary-foreground px-3 py-1 rounded-full text-xs font-semibold">
                     Curso Intensivo (21h)
                   </div>
-                  <h1 className="text-3xl font-bold tracking-tight">Modelos Financieros Aplicados con R Studio</h1>
+                  <h1 className="text-3xl font-bold tracking-tight">Modelos Financieros Aplicados</h1>
                   <p className="text-muted-foreground max-w-xl">
                     Aprende a analizar el mercado de valores, gestionar riesgos y construir portafolios eficientes mediante programación cuantitativa.
                   </p>
                   <div className="flex items-center gap-4 text-sm font-medium">
-                    <div className="flex items-center text-primary"><Trophy className="w-4 h-4 mr-1"/> 45% Completado</div>
-                    <div className="flex items-center text-muted-foreground"><BookOpen className="w-4 h-4 mr-1"/> 8 Módulos</div>
+                    <div className="flex items-center text-primary"><Trophy className="w-4 h-4 mr-1"/> {Math.round((modules.filter(m => m.status === 'completed').length / modules.length) * 100)}% Completado</div>
+                    <div className="flex items-center text-muted-foreground"><BookOpen className="w-4 h-4 mr-1"/> {modules.length} Módulos</div>
                     <div className="flex items-center text-muted-foreground"><Code2 className="w-4 h-4 mr-1"/> R Base</div>
                   </div>
                 </div>
@@ -58,9 +53,11 @@ export default function CoursesPage() {
                       <CardTitle className="text-sm">Tu Progreso</CardTitle>
                     </CardHeader>
                     <CardContent>
-                      <Progress value={45} className="h-2 mb-2" />
-                      <p className="text-xs text-muted-foreground text-center">Continúa en el <strong>Módulo 3</strong></p>
-                      <Button className="w-full mt-4">Continuar Clase</Button>
+                      <Progress value={(modules.filter(m => m.status === 'completed').length / modules.length) * 100} className="h-2 mb-2" />
+                      <p className="text-xs text-muted-foreground text-center">Continúa en el <strong>Módulo {modules.find(m => m.status === 'in-progress')?.id || 1}</strong></p>
+                      <Link href={`/courses/module-${modules.find(m => m.status === 'in-progress')?.id || 1}`} className="w-full mt-4 flex">
+                        <Button className="w-full">Continuar Clase</Button>
+                      </Link>
                     </CardContent>
                   </Card>
                 </div>
@@ -85,11 +82,17 @@ export default function CoursesPage() {
                          mod.status === 'in-progress' ? 'En curso. Tienes actividades pendientes.' : 'Bloqueado. Completa el módulo anterior.'}
                       </CardDescription>
                     </div>
-                    {mod.status !== 'locked' && (
+                    {mod.id <= 2 ? (
+                      <Link href={`/courses/module-${mod.id}`}>
+                        <Button variant={mod.status === 'in-progress' ? 'default' : 'outline'}>
+                          {mod.status === 'in-progress' ? 'Continuar' : 'Repasar'}
+                        </Button>
+                      </Link>
+                    ) : mod.status !== 'locked' ? (
                       <Button variant={mod.status === 'in-progress' ? 'default' : 'outline'}>
                         {mod.status === 'in-progress' ? 'Continuar' : 'Repasar'}
                       </Button>
-                    )}
+                    ) : null}
                   </CardHeader>
                   <CardContent className="ml-14 pb-4">
                     {mod.status !== 'locked' && (

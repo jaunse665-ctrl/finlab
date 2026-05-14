@@ -19,7 +19,7 @@ export default function DashboardLayout({
           <SidebarTrigger className="-ml-1" />
           <Separator orientation="vertical" className="mr-2 h-4" />
           <div className="flex-1">
-            <h1 className="text-sm font-medium">Plataforma Universitaria de Modelos Financieros</h1>
+            <h1 className="text-sm font-medium">Plataforma de Modelos Financieros</h1>
           </div>
           <div className="ml-auto flex items-center space-x-4">
             {/* User profile nav could go here */}
