@@ -133,6 +133,9 @@
   .holographic-card {
     position: relative;
     overflow: hidden;
+    /* Un borde dorado brillante y sombra resplandeciente para las "cartas raras" */
+    box-shadow: 0 0 20px rgba(255, 215, 0, 0.4), inset 0 0 15px rgba(255, 215, 0, 0.1);
+    border-color: rgba(255, 215, 0, 0.6) !important;
   }
   
   .holographic-card::before {
@@ -142,24 +145,27 @@
     left: -50%;
     width: 200%;
     height: 200%;
+    /* Gradiente de arcoíris metálico intenso (Holo Foil) */
     background: linear-gradient(
-      60deg,
-      transparent 0%,
-      transparent 40%,
-      rgba(255, 255, 255, 0.4) 48%,
-      rgba(255, 255, 255, 0.8) 50%,
-      rgba(255, 255, 255, 0.4) 52%,
-      transparent 60%,
-      transparent 100%
+      115deg,
+      transparent 15%,
+      rgba(255, 255, 255, 0.6) 25%,
+      rgba(255, 215, 0, 0.6) 30%,     /* Dorado */
+      rgba(255, 105, 180, 0.5) 40%,   /* Rosa brillante */
+      rgba(0, 255, 255, 0.5) 50%,     /* Cian brillante */
+      rgba(255, 215, 0, 0.6) 60%,     /* Dorado */
+      rgba(255, 255, 255, 0.6) 65%,
+      transparent 80%
     );
-    animation: hologram 4s infinite linear;
+    animation: hologram 3s infinite linear;
     pointer-events: none;
     z-index: 10;
-    mix-blend-mode: overlay;
+    mix-blend-mode: color-dodge; /* Hace que los colores resalten mágicamente sobre el fondo */
+    opacity: 0.9;
   }
   
   @keyframes hologram {
-    0% { transform: translateY(0%) translateX(-50%) rotate(45deg); }
-    100% { transform: translateY(0%) translateX(50%) rotate(45deg); }
+    0% { transform: translateY(0%) translateX(-60%) rotate(45deg); }
+    100% { transform: translateY(0%) translateX(60%) rotate(45deg); }
   }
 }
