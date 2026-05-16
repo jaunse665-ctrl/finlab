@@ -133,39 +133,77 @@
   .holographic-card {
     position: relative;
     overflow: hidden;
-    /* Un borde dorado brillante y sombra resplandeciente para las "cartas raras" */
-    box-shadow: 0 0 20px rgba(255, 215, 0, 0.4), inset 0 0 15px rgba(255, 215, 0, 0.1);
-    border-color: rgba(255, 215, 0, 0.6) !important;
+    /* Un borde brillante y sombra de color arcoíris */
+    box-shadow: 0 10px 30px -10px rgba(255, 0, 255, 0.4), 
+                0 0 20px rgba(0, 255, 255, 0.4), 
+                inset 0 0 20px rgba(255, 255, 255, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.3) !important;
   }
   
   .holographic-card::before {
     content: '';
     position: absolute;
-    top: -50%;
-    left: -50%;
+    inset: -50%;
     width: 200%;
     height: 200%;
-    /* Gradiente de arcoíris metálico intenso (Holo Foil) */
-    background: linear-gradient(
-      115deg,
-      transparent 15%,
-      rgba(255, 255, 255, 0.6) 25%,
-      rgba(255, 215, 0, 0.6) 30%,     /* Dorado */
-      rgba(255, 105, 180, 0.5) 40%,   /* Rosa brillante */
-      rgba(0, 255, 255, 0.5) 50%,     /* Cian brillante */
-      rgba(255, 215, 0, 0.6) 60%,     /* Dorado */
-      rgba(255, 255, 255, 0.6) 65%,
-      transparent 80%
-    );
-    animation: hologram 3s infinite linear;
+    /* Efecto holográfico tipo Panini: Arcoíris + Brillo Diagonal */
+    background: 
+      /* Brillo fuerte blanco/diagonal */
+      linear-gradient(
+        115deg,
+        transparent 20%,
+        rgba(255, 255, 255, 0.8) 30%,
+        transparent 45%
+      ),
+      /* Lámina Arcoíris repetitiva */
+      repeating-linear-gradient(
+        45deg,
+        rgba(255, 0, 0, 0.6),
+        rgba(255, 154, 0, 0.6),
+        rgba(208, 222, 33, 0.6),
+        rgba(79, 220, 74, 0.6),
+        rgba(63, 218, 216, 0.6),
+        rgba(47, 201, 226, 0.6),
+        rgba(28, 127, 238, 0.6),
+        rgba(95, 21, 242, 0.6),
+        rgba(186, 12, 248, 0.6),
+        rgba(251, 7, 217, 0.6),
+        rgba(255, 0, 0, 0.6) 40px
+      );
+    background-size: 200% 200%, 150% 150%;
+    animation: holo-foil 12s infinite linear;
     pointer-events: none;
     z-index: 10;
-    mix-blend-mode: color-dodge; /* Hace que los colores resalten mágicamente sobre el fondo */
-    opacity: 0.9;
+    mix-blend-mode: color-dodge; /* Magia "wow" sobre fondos oscuros */
+    opacity: 0.85;
   }
   
-  @keyframes hologram {
-    0% { transform: translateY(0%) translateX(-60%) rotate(45deg); }
-    100% { transform: translateY(0%) translateX(60%) rotate(45deg); }
+  /* Capa de chispas/estrellitas (sparkles) */
+  .holographic-card::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image: 
+      radial-gradient(circle at 10% 20%, rgba(255,255,255,0.9) 1px, transparent 2px),
+      radial-gradient(circle at 80% 40%, rgba(255,255,255,1) 1.5px, transparent 3px),
+      radial-gradient(circle at 30% 70%, rgba(255,255,255,0.9) 1px, transparent 2px),
+      radial-gradient(circle at 70% 90%, rgba(255,255,255,1) 2px, transparent 4px),
+      radial-gradient(circle at 50% 50%, rgba(255,255,255,0.8) 1px, transparent 3px);
+    background-size: 80px 80px;
+    animation: holo-sparkle 8s infinite alternate ease-in-out;
+    pointer-events: none;
+    z-index: 11;
+    mix-blend-mode: screen;
+  }
+
+  @keyframes holo-foil {
+    0% { background-position: 0% 0%, 0% 0%; }
+    100% { background-position: 200% 200%, 100% 100%; }
+  }
+
+  @keyframes holo-sparkle {
+    0% { opacity: 0.1; }
+    50% { opacity: 0.6; }
+    100% { opacity: 0.1; }
   }
 }

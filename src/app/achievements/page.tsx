@@ -12,8 +12,9 @@ import { Progress } from "@/components/ui/progress"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
-import { Trophy, Code2, TrendingUp, ShieldAlert, Briefcase, Award, Lock, Sparkles, AlertCircle } from "lucide-react"
-import { useState, useEffect } from "react"
+import { Trophy, Code2, TrendingUp, ShieldAlert, Briefcase, Award, Lock, Sparkles, AlertCircle, Download } from "lucide-react"
+import { useState, useEffect, useRef } from "react"
+import * as htmlToImage from "html-to-image"
 import { claimBadgeWithCode, getUserBadges, resetBadge } from "./actions"
 
 const BASE_ACHIEVEMENTS = [
@@ -75,6 +76,43 @@ export default function AchievementsPage() {
   const [isToggling, setIsToggling] = useState<number | null>(null)
   const [codes, setCodes] = useState<Record<number, string>>({})
   const [errors, setErrors] = useState<Record<number, string>>({})
+  const [isDownloading, setIsDownloading] = useState(false)
+  const albumRef = useRef<HTMLDivElement>(null)
+
+  const handleDownloadAlbum = async () => {
+    if (!albumRef.current) return
+    
+    setIsDownloading(true)
+    try {
+      // Small delay to ensure rendering is stable
+      await new Promise(resolve => setTimeout(resolve, 100))
+      
+      const element = albumRef.current;
+      const dataUrl = await htmlToImage.toPng(element, {
+        quality: 1.0,
+        backgroundColor: "#ffffff",
+        pixelRatio: 2,
+        width: element.scrollWidth,
+        height: element.scrollHeight,
+        skipFonts: true, // Evita errores de CORS (SecurityError) por hojas de estilo de extensiones de navegador
+        style: {
+          margin: '0',
+          transform: 'none',
+        }
+      })
+      
+      const link = document.createElement("a")
+      link.href = dataUrl
+      link.download = "mi_album_finlab.png"
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+    } catch (error) {
+      console.error("Error generating album image:", error)
+    } finally {
+      setIsDownloading(false)
+    }
+  }
 
   const loadBadges = async () => {
     try {
@@ -141,7 +179,7 @@ export default function AchievementsPage() {
         </header>
         
         <main className="flex-1 overflow-auto bg-background p-6">
-          <div className="max-w-5xl mx-auto space-y-8">
+          <div className="max-w-5xl mx-auto space-y-8 p-4 md:p-8 bg-white rounded-[2rem]" ref={albumRef}>
             
             <div className="flex flex-col md:flex-row justify-between md:items-center gap-6 bg-zinc-50 border border-border rounded-2xl p-6 shadow-sm">
               <div className="flex items-center gap-6">
@@ -161,6 +199,18 @@ export default function AchievementsPage() {
                   <span>{unlockedCount} / {totalCount}</span>
                 </div>
                 <Progress value={completionPercentage} className="h-2" />
+                {unlockedCount > 0 && (
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="w-full mt-4 gap-2 hover:bg-primary/5 hover:text-primary transition-colors"
+                    onClick={handleDownloadAlbum}
+                    disabled={isDownloading}
+                  >
+                    <Download className="h-4 w-4" />
+                    {isDownloading ? "Generando Álbum..." : "Descargar Álbum en HD"}
+                  </Button>
+                )}
               </div>
             </div>
 
@@ -175,9 +225,9 @@ export default function AchievementsPage() {
                 return (
                   <Card 
                     key={achievement.id} 
-                    className={`relative overflow-hidden transition-all duration-500 rounded-2xl ${
+                    className={`group relative overflow-hidden transition-all duration-500 rounded-2xl ${
                       isUnlocked 
-                        ? `border-2 ${achievement.border} shadow-lg bg-white holographic-card hover:scale-[1.02]` 
+                        ? `shadow-2xl bg-zinc-950 holographic-card hover:scale-[1.02] transform-gpu` 
                         : 'opacity-90 grayscale hover:grayscale-[0.5] border-border border-dashed border-2 bg-zinc-50'
                     }`}
                   >
@@ -187,18 +237,67 @@ export default function AchievementsPage() {
                       </div>
                     )}
                     
-                    <CardHeader className="text-center pb-2 pt-8 z-10 relative">
-                      <div className={`mx-auto h-16 w-16 rounded-[1.25rem] flex items-center justify-center mb-4 transition-colors duration-500 shadow-sm ${isUnlocked ? achievement.bg : 'bg-zinc-200'}`}>
-                        <achievement.icon className={`h-8 w-8 transition-colors duration-500 ${isUnlocked ? achievement.color : 'text-zinc-400'}`} />
-                      </div>
-                      <CardTitle className={`text-lg font-bold ${isUnlocked ? 'text-zinc-900' : 'text-zinc-600'}`}>{achievement.title}</CardTitle>
+                    <CardHeader className="text-center pb-2 pt-8 z-20 relative">
+                      {isUnlocked ? (
+                        <>
+                          {/* Marca de agua sutil y elegante */}
+                          <achievement.icon className={`absolute -right-4 -bottom-4 w-32 h-32 opacity-[0.03] transform -rotate-12 pointer-events-none transition-colors duration-500 ${achievement.color}`} />
+                          
+                          {/* Contenedor de la Insignia: Elegante, tipo titanio/vidrio */}
+                          <div className="relative mx-auto h-20 w-20 mb-6 flex items-center justify-center group-hover:scale-105 transition-transform duration-500 z-10">
+                            {/* Borde exterior sutil */}
+                            <div className="absolute inset-0 rounded-[1.5rem] bg-gradient-to-br from-white/20 to-transparent p-[1px]">
+                              {/* Fondo interior premium */}
+                              <div className={`w-full h-full rounded-[1.5rem] flex items-center justify-center shadow-inner bg-gradient-to-br from-zinc-800 to-zinc-950 backdrop-blur-xl`}>
+                                <div className="absolute inset-0 rounded-[1.5rem] bg-gradient-to-tr from-transparent via-white/5 to-transparent opacity-50 pointer-events-none"></div>
+                                <achievement.icon className={`h-10 w-10 drop-shadow-md transition-colors duration-500 ${achievement.color}`} />
+                              </div>
+                            </div>
+                          </div>
+                        </>
+                      ) : (
+                        <div className="mx-auto h-16 w-16 rounded-[1.25rem] flex items-center justify-center mb-4 transition-colors duration-500 shadow-sm bg-zinc-200">
+                          <achievement.icon className="h-8 w-8 transition-colors duration-500 text-zinc-400" />
+                        </div>
+                      )}
+                      <CardTitle className={`text-lg font-bold ${isUnlocked ? 'text-white drop-shadow-md' : 'text-zinc-600'}`}>{achievement.title}</CardTitle>
                       
                       {isUnlocked ? (
-                        <Badge variant="secondary" className="mx-auto mt-2 w-max text-xs bg-primary text-primary-foreground flex items-center gap-1 cursor-pointer hover:bg-red-500 hover:text-white transition-colors group" onClick={() => handleReset(achievement.id)}>
-                          <Sparkles className="h-3 w-3 group-hover:hidden" />
-                          <span className="group-hover:hidden">Reclamado: {dateStr}</span>
-                          <span className="hidden group-hover:inline">Revocar (Test)</span>
-                        </Badge>
+                        <div className="flex flex-col items-center gap-2 mt-2">
+                          <Badge variant="secondary" className="mx-auto w-max text-xs bg-primary text-primary-foreground flex items-center gap-1 cursor-pointer hover:bg-red-500 hover:text-white transition-colors group" onClick={() => handleReset(achievement.id)}>
+                            <Sparkles className="h-3 w-3 group-hover:hidden" />
+                            <span className="group-hover:hidden">Reclamado: {dateStr}</span>
+                            <span className="hidden group-hover:inline">Revocar (Test)</span>
+                          </Badge>
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            className="h-7 text-[10px] gap-1 rounded-full border-[#0A66C2]/20 text-[#0A66C2] hover:bg-[#0A66C2]/10 transition-colors"
+                            onClick={() => {
+                              const text = `Me complace compartir que he obtenido el reconocimiento de "${achievement.title}" en el programa de FinLab University.\n\n${achievement.description}`;
+                              const url = `https://www.linkedin.com/feed/?shareActive=true&text=${encodeURIComponent(text)}`;
+                              window.open(url, '_blank', 'noopener,noreferrer');
+                            }}
+                          >
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              width="24"
+                              height="24"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              className="h-3 w-3"
+                            >
+                              <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z" />
+                              <rect width="4" height="12" x="2" y="9" />
+                              <circle cx="4" cy="4" r="2" />
+                            </svg>
+                            Compartir
+                          </Button>
+                        </div>
                       ) : (
                         <div className="mt-4 space-y-3 px-2">
                           <div className="space-y-1">
@@ -238,8 +337,8 @@ export default function AchievementsPage() {
                         </div>
                       )}
                     </CardHeader>
-                    <CardContent className="text-center z-10 relative">
-                      <p className="text-sm text-muted-foreground leading-relaxed">
+                    <CardContent className="text-center z-20 relative">
+                      <p className={`text-sm leading-relaxed ${isUnlocked ? 'text-zinc-300 drop-shadow-sm' : 'text-muted-foreground'}`}>
                         {achievement.description}
                       </p>
                     </CardContent>
